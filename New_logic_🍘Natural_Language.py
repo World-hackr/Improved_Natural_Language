@@ -16,6 +16,32 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 from matplotlib.widgets import Slider
 
 ##############################################################################
+# --- NEW HELPER: clean SVG exporter (vector-only plot, no axes/background) ---
+##############################################################################
+def export_clean_svg(svg_path, fig, ax):
+    """
+    Save the current figure to svg_path with:
+      - only the plot lines visible
+      - no axes, ticks, labels, spines, or background
+      - zero margins
+    """
+    # Hide axes decorations
+    ax.axis('off')             # hides spines, ticks, labels :contentReference[oaicite:8]{index=8}
+    ax.set_axis_off()          # suppresses all axis decorations :contentReference[oaicite:9]{index=9}
+    # Remove the figure background
+    fig.patch.set_visible(False)  # removes background patch :contentReference[oaicite:10]{index=10}
+    # Save as SVG with no padding or margins
+    fig.savefig(
+        svg_path,
+        format='svg',
+        bbox_inches='tight',   # tight bbox :contentReference[oaicite:11]{index=11}
+        pad_inches=0           # zero padding :contentReference[oaicite:12]{index=12}
+    )
+    # Optional extra bounding‐box removal
+    plt.box(False)            # removes any residual box :contentReference[oaicite:13]{index=13}
+    print(f"Clean SVG saved to {svg_path}")
+
+##############################################################################
 # 1) CUSTOM WAVE GENERATION WITH NUMERIC PRESETS
 ##############################################################################
 def generate_custom_wave():
@@ -596,6 +622,9 @@ def process_single_file():
     final_path = os.path.join(new_folder, "final_drawing.png")
     fig.savefig(final_path)
     print(f"final_drawing.png saved to {final_path}")
+    # --- generate matching clean SVG ---
+    svg_final = os.path.splitext(final_path)[0] + ".svg"
+    export_clean_svg(svg_final, fig, ax)
 
     csv_path = os.path.join(new_folder, "envelope.csv")
     with open(csv_path, "w", newline="") as f_:
@@ -613,7 +642,7 @@ def process_single_file():
     wavfile.write(wav_path, ep.sample_rate, (mod_wave * 32767).astype(np.int16))
     print(f"Modified audio saved to {wav_path}")
 
-    # =========== natural_lang => strict sign-based coloring =============
+    # =========== natural_lang Color Picker ===
     if ep.faint_line is not None:
         ep.faint_line.remove()
         ep.faint_line = None
@@ -654,6 +683,9 @@ def process_single_file():
     nat_path = os.path.join(new_folder, "natural_lang.png")
     fig.savefig(nat_path)
     print(f"natural_lang.png saved to {nat_path}")
+    # --- generate matching clean SVG ---
+    svg_nat = os.path.splitext(nat_path)[0] + ".svg"
+    export_clean_svg(svg_nat, fig, ax)
 
     # =========== wave_comparison => original vs modified =============
     for line in ax.lines[:]:
@@ -676,6 +708,10 @@ def process_single_file():
     cmp_path = os.path.join(new_folder, "wave_comparison.png")
     fig.savefig(cmp_path)
     print(f"wave_comparison.png saved to {cmp_path}")
+    # --- generate matching clean SVG ---
+    svg_cmp = os.path.splitext(cmp_path)[0] + ".svg"
+    export_clean_svg(svg_cmp, fig, ax)
+
     plt.close()
 
 def main():
